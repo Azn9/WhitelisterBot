@@ -1,0 +1,5 @@
+name: Whitelisterbot
+version: @version@
+main: dev.azn9.whitelisterbot.Whitelisterbot
+api-version: 1.17
+authors: [ Azn9 ]
