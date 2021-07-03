@@ -10,8 +10,8 @@ public final class Whitelisterbot extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
 
-        String token = this.getConfig().getString("token");
-        long channelId = this.getConfig().getLong("channel");
+        String token = this.getConfig().getString("config.token");
+        long channelId = this.getConfig().getLong("config.channel");
 
         if (token == null || token.isEmpty() || channelId == 0) {
             this.getServer().getLogger().severe("Vous n'avez pas précisé toutes les configurations requises !");
