@@ -8,8 +8,8 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.reaction.ReactionEmoji;
-import net.minecraft.server.v1_16_R3.WhiteListEntry;
-import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
+import net.minecraft.server.players.UserWhiteListEntry;
+import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -25,44 +25,47 @@ public class Bot {
     private final Plugin plugin;
     private final String token;
     private final long channelId;
+    private final long threadId;
     private Thread thread;
     private GatewayDiscordClient client;
     private BukkitTask task;
 
-    public Bot(Plugin plugin, String token, long channelId) {
+    public Bot(Plugin plugin, String token, long channelId, long threadId) {
         this.plugin = plugin;
         this.token = token;
         this.channelId = channelId;
+        this.threadId = threadId;
     }
 
     public void start() {
         this.task = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
             try {
-                ((CraftServer) this.plugin.getServer()).getHandle().getWhitelist().save();
+                ((CraftServer) this.plugin.getServer()).getHandle().getWhiteList().save();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }, 60L, 600L);
 
         this.thread = new Thread(() -> {
-            DiscordClient discordClient = DiscordClient.create(token);
+            DiscordClient discordClient = DiscordClient.create(this.token);
             this.client = discordClient.login().block();
 
             if (this.client == null) {
                 this.plugin.getLogger().severe("Le bot n'a pas pu démarrer !");
 
-                this.plugin.getPluginLoader().disablePlugin(this.plugin);
+                this.plugin.getServer().getPluginManager().disablePlugin(this.plugin);
                 return;
             }
 
             this.client.on(MessageCreateEvent.class).subscribe(event -> {
-                if (!event.getMember().isPresent() || event.getMember().get().isBot()) {
+                if (event.getMember().isEmpty() || event.getMember().get().isBot()) {
                     return;
                 }
 
                 Message message = event.getMessage();
+                long messageChannelId = message.getChannelId().asLong();
 
-                if (message.getChannelId().asLong() == channelId) {
+                if (messageChannelId == this.channelId || messageChannelId == this.threadId) {
                     String content = message.getContent().trim();
 
                     if (content.matches("[A-Za-z0-9_]{3,16}")) {
@@ -99,7 +102,7 @@ public class Bot {
                                             try {
                                                 UUID uuid = UUID.fromString(dataObject.get("id").getAsString());
 
-                                                this.plugin.getServer().getScheduler().runTask(this.plugin, () -> ((CraftServer) this.plugin.getServer()).getHandle().getWhitelist().add(new WhiteListEntry(new GameProfile(uuid, dataObject.get("username").getAsString()))));
+                                                this.plugin.getServer().getScheduler().runTask(this.plugin, () -> ((CraftServer) this.plugin.getServer()).getHandle().getWhiteList().add(new UserWhiteListEntry(new GameProfile(uuid, dataObject.get("username").getAsString()))));
 
                                                 message.removeSelfReaction(ReactionEmoji.unicode("⌛")).then(message.addReaction(ReactionEmoji.unicode("✅"))).then(message.getChannel().flatMap(messageChannel -> messageChannel.createMessage(messageCreateSpec -> {
                                                     messageCreateSpec.setContent("Vous avez bien été ajouté à la whitelist !");

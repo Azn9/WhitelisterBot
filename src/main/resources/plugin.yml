@@ -1,5 +1,5 @@
 name: Whitelisterbot
 version: @version@
 main: dev.azn9.whitelisterbot.Whitelisterbot
-api-version: 1.16
+api-version: 1.21
 authors: [ Azn9 ]

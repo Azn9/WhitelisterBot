@@ -1,3 +1,4 @@
 config:
   token:
   channel: 0
+  threadId: 0

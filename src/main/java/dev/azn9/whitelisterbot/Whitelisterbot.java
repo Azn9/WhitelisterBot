@@ -12,15 +12,16 @@ public final class Whitelisterbot extends JavaPlugin {
 
         String token = this.getConfig().getString("config.token");
         long channelId = this.getConfig().getLong("config.channel");
+        long threadId = this.getConfig().getLong("config.threadId");
 
-        if (token == null || token.isEmpty() || channelId == 0) {
+        if (token == null || token.isEmpty() || (channelId == 0 && threadId == 0)) {
             this.getServer().getLogger().severe("Vous n'avez pas précisé toutes les configurations requises !");
 
-            this.getPluginLoader().disablePlugin(this);
+            this.getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        this.bot = new Bot(this, token, channelId);
+        this.bot = new Bot(this, token, channelId, threadId);
         this.bot.start();
     }
 
